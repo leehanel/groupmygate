@@ -1,0 +1,30 @@
+services:
+  groupmygate-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: groupmygate-app
+    networks:
+      - traefik
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    restart: unless-stopped
+
+  
+
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: groupmygate-test
+    command: ["python", "-m", "pytest", "-q"]
+    environment:
+      PYTHONPATH: /app/src
+    profiles:
+      - test
+
+networks:
+  traefik:
+    external: true
