@@ -1,0 +1,57 @@
+# ESPHome example: subscribe to the GroupMe gate MQTT topic and trigger a relay.
+#
+# When the bot receives "!gate open", it publishes an empty message to
+# GATE_MQTT_TOPIC (default: /home-commands/gate/open). This device listens
+# for that message and pulses a relay to simulate a button press on the gate
+# opener.
+#
+# Adjust substitutions to match your environment before flashing.
+
+substitutions:
+  device_name: gate-opener
+  mqtt_broker: localhost             # matches MQTT_BROKER in .env
+  mqtt_port: "1883"                  # matches MQTT_PORT in .env
+  mqtt_topic: "/home-commands/gate/open"  # matches GATE_MQTT_TOPIC in .env
+  relay_pin: GPIO8                   # GPIO connected to your gate relay
+  pulse_duration: 500ms              # how long to close the relay (momentary press)
+
+esphome:
+  name: ${device_name}
+
+esp32:
+  board: esp32-c3-devkitm-1
+  framework:
+    type: arduino
+
+logger:
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  ap:                                # fallback hotspot if WiFi is unavailable
+    ssid: "${device_name} Fallback"
+    password: !secret ap_password
+
+captive_portal:
+
+mqtt:
+  broker: ${mqtt_broker}
+  port: ${mqtt_port}
+  # username: !secret mqtt_username  # uncomment if your broker requires auth
+  # password: !secret mqtt_password
+  on_message:
+    - topic: ${mqtt_topic}
+      then:
+        - switch.turn_on: gate_relay
+        - delay: ${pulse_duration}
+        - switch.turn_off: gate_relay
+        - logger.log: "Gate triggered via MQTT"
+
+switch:
+  - platform: gpio
+    name: "Gate Relay"
+    id: gate_relay
+    pin:
+      number: ${relay_pin}
+      inverted: false           # set true if your relay board is active-low
+    restore_mode: ALWAYS_OFF    # never leave the relay on after a reboot

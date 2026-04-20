@@ -98,3 +98,13 @@ Edit `src/groupme_bot/handlers/triggers.py` and append a `Trigger` entry to `TRI
 - `!gate video`: posts a snapshot image and a Frigate review link to the full clip window
 
 Use `FRIGATE_API_BASE_URL` for the container-to-Frigate network path and `FRIGATE_FRONTEND_BASE_URL` for the public URL users can open from GroupMe.
+
+### ESPHome integration
+
+`examples/gate_esphome.yaml` shows how to wire an ESP8266/ESP32 to your gate opener using ESPHome. When `!gate open` fires, the bot publishes an empty message to `GATE_MQTT_TOPIC`; the device subscribes to that topic and pulses a GPIO relay for a configurable duration to simulate a button press.
+
+Edit the `substitutions` block at the top of the file to set your broker IP, MQTT topic, GPIO pin, and pulse duration, then flash with:
+
+```bash
+esphome run examples/gate_esphome.yaml
+```
